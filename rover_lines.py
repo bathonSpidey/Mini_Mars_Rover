@@ -3,7 +3,7 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 print("Camera connected")
 
 def make_coordinates(image, line_parameters):

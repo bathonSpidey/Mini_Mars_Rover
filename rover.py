@@ -184,13 +184,12 @@ while True:
 	try:
             lane_image = detect_lanes(frame)
             turn_image = turn(canny(frame))
-	#result_image = cv2.addWeighted(lane_image, 1, turn_image, 1, 1)
-	#cv2.imshow('result', result_image)
-            print("distance",detect_lanes(frame)[1])
+            result_image = cv2.addWeighted(lane_image, 1, turn_image, 1, 1)
+            cv2.imshow('result', result_image)
             check_turning((detect_lanes(frame)[1]))
             
 	except:
-            pass
+            cv2.imshow('result', frame)
 	
 	#print('found h line')
 	if cv2.waitKey(10) & 0xFF == ord('q'):
