@@ -1,12 +1,13 @@
 import cv2
 import numpy as np
 import time
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
+import direction as dr
 
 green_lower = np.array([64, 70, 86], np.uint8)
 green_upper = np.array([80,255,255], np.uint8)
 
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 print("Camera connected")
 
 def make_coordinates(image, line_parameters):
@@ -36,7 +37,7 @@ def average_slope_intercept(image, lines):
 	right_line = make_coordinates(image, right_fit_average)
 	left_distance = midpoints(image, left_line)
 	right_distance = midpoints(image, right_line)
-	return np.array([left_line, right_line])
+	return np.array([left_line, right_line]), [left_distance, right_distance]
 
 def midpoints(image, line_parameters):
 	line_midpoint = [round((line_parameters[0]+line_parameters[2])/2, 2), (round((line_parameters[1]+line_parameters[3])/2, 2))]
@@ -101,6 +102,7 @@ def turn(image):
 		try:
 			direction = arrow_detection(frame)
 			print(direction)
+			turn_motion(direction)
 		except:
 			print("No direction")
 		return combo_image
@@ -112,10 +114,10 @@ def detect_lanes(image):
 	canny_image = canny(lane_image)
 	lines = cv2.HoughLinesP(canny_image, 1, np.pi/180, 50, np.array([]), minLineLength=20, maxLineGap=50)
 	try:
-		averaged_lines = average_slope_intercept(lane_image, lines)
+		averaged_lines, distances = average_slope_intercept(lane_image, lines)
 		line_image = display_lines(lane_image, averaged_lines)
 		combo_image = cv2.addWeighted(lane_image, 1, line_image, 1, 1)
-		return combo_image
+		return combo_image, distances
 	except:
 		return frame
 
@@ -157,16 +159,39 @@ def arrow_detection(image):
 
 	return direction
 
+def check_turning(dis):
+    if int(dis[0]) < 150:
+        dr.goCustom(110, 90)
+    elif int(dis[1]) < 200:
+        dr.goCustom(90, 110)
+    else:
+        dr.goCustom(90, 90)
+
+def turn_motion(direction):
+    if direction=="Left":
+        dr.left()
+    elif direction=="Right":
+        dr.right()
+    else:
+        pass
 #frame = cv2.imread('turn_road.png')
 #cv2.waitKey(0)
-
+#time.sleep(10)
 while True:
+        
 	_, frame=cap.read()
 
-	lane_image = detect_lanes(frame)
-	turn_image = turn(canny(frame))
-	result_image = cv2.addWeighted(lane_image, 1, turn_image, 1, 1)
-	cv2.imshow('result', result_image)
+	try:
+            lane_image = detect_lanes(frame)
+            turn_image = turn(canny(frame))
+	#result_image = cv2.addWeighted(lane_image, 1, turn_image, 1, 1)
+	#cv2.imshow('result', result_image)
+            print("distance",detect_lanes(frame)[1])
+            check_turning((detect_lanes(frame)[1]))
+            
+	except:
+            pass
+	
 	#print('found h line')
 	if cv2.waitKey(10) & 0xFF == ord('q'):
 		cap.release()
