@@ -104,6 +104,7 @@ while True:
             cv2.imshow("Result", combo_image)   
             check_turning(distances)
     except:
+            
             cv2.imshow("Result", image)
             dr.goCustom(70,90)
     if cv2.waitKey(10) & 0xFF == ord('q'):
