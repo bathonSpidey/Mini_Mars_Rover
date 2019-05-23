@@ -88,25 +88,34 @@ def check_turning(dis):
 
 while True:
     _, image=cap.read()
+    i=0
     #dr.goStraight()
     #time.sleep(2)
     #dr.stop(3)
+    #image = cv2.imread('roverroadvision.png')
+    while True:
+        while i<50:
+            try:
+                lane_image = np.copy(image)
+                canny_image = canny(lane_image)
+                cropped_image = roi(canny_image)
+                lines = cv2.HoughLinesP(canny_image, 1, np.pi/180, 50, np.array([]), minLineLength=20, maxLineGap=50)
+                averaged_lines, distances = average_slope_intercept(lane_image, lines)
+                line_image = display_lines(lane_image, averaged_lines)
+                combo_image = cv2.addWeighted(lane_image, 0.8, line_image, 1, 1)
+                cv2.imshow("Result", combo_image)   
+                check_turning(distances)
+                i+=1
+                print(i)
+            except:
+                cv2.imshow("Result", image)
+                dr.goCustom(60,70)
+                i+=1
+                print(i)
+        
 
-#image = cv2.imread('roverroadvision.png')
-    try:
-            lane_image = np.copy(image)
-            canny_image = canny(lane_image)
-            cropped_image = roi(canny_image)
-            lines = cv2.HoughLinesP(canny_image, 1, np.pi/180, 50, np.array([]), minLineLength=20, maxLineGap=50)
-            averaged_lines, distances = average_slope_intercept(lane_image, lines)
-            line_image = display_lines(lane_image, averaged_lines)
-            combo_image = cv2.addWeighted(lane_image, 0.8, line_image, 1, 1)
-            cv2.imshow("Result", combo_image)   
-            check_turning(distances)
-    except:
-            
-            cv2.imshow("Result", image)
-            dr.goCustom(70,90)
+        break
+    time.sleep(2)
     if cv2.waitKey(10) & 0xFF == ord('q'):
         cap.release()
         cv2.destroyAllWindows()
