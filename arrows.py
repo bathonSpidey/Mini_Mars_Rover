@@ -16,6 +16,8 @@ def read_image(add):
 def gray(img):
     return cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 
+#def mask(img)
+
 def corners(gray):
     countL=0
     countR=0
