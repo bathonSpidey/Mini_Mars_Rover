@@ -9,8 +9,10 @@ Created on Tue May 21 18:52:28 2019
 import numpy as np
 import cv2
 
-cap = cv2.VideoCapture(0)
-
+cap = cv2.VideoCapture(0) # my webcam
+cap.set(3, 1280) # set the resolution
+cap.set(4, 720)
+cap.set(cv2.CAP_PROP_AUTOFOCUS, 0)
 while(True):
     # Capture frame-by-frame
     ret, frame = cap.read()
