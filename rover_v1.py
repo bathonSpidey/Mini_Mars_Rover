@@ -88,7 +88,6 @@ def display_lines(image, lines):
         for line in lines:
             x1, y1, x2, y2 = line.reshape(4)
             cv2.line(line_image, (x1, y1), (x2, y2), (255, 0, 0), 5)
-            cv2.line(line_image, (320, 0), (320, 480), (0, 0, 255), 1)
     return line_image
 
 def canny(image):
@@ -124,6 +123,10 @@ def detect_lanes(image):
 	averaged_lines, distances = average_slope_intercept(lane_image, lines)
 	line_image = display_lines(lane_image, averaged_lines)
 	combo_image = cv2.addWeighted(lane_image, 1, line_image, 1, 1)
+
+	cv2.line(line_image, (320, 0), (320, 480), (0, 0, 255), 1)
+	cv2.putText(combo_image, 'Lanes', (10, 20), cv2.FONT_HERSHEY_SIMPLEX, text_size, (0, 0, 255), lineType=cv2.LINE_AA)
+
 	return combo_image, distances
 
 def detect_h_line(image):
