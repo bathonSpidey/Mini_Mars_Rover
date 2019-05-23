@@ -1,7 +1,9 @@
 import cv2
 import numpy as np
 import time
-import direction as dr
+import statistics
+from statistics import mode
+#import direction as dr
 #import matplotlib.pyplot as plt
 
 green_lower = np.array([64, 70, 86], np.uint8)
@@ -76,7 +78,7 @@ def roi(image):
 
 def roi_h(image):
 	height = image.shape[0]
-	polygons = np.array([[(0,300), (640, 300), (640, 380), (0, 380)]])
+	polygons = np.array([[(0, 450), (640, 450), (640, 480), (0, 480)]])
 	mask = np.zeros_like(image)
 	cv2.fillPoly(mask, polygons, 255)
 	masked_image = cv2.bitwise_and(image, mask)
@@ -101,8 +103,8 @@ def arrow_image_convertion(image):
 	mask = cv2.inRange(hsv, green_lower, green_upper)
 	res = cv2.bitwise_and(image, image, mask=mask)
 	canny = cv2.Canny(mask, 80, 110)
-	#blur = cv2.GaussianBlur(canny, (5,5), 1)
-	return canny
+	blur = cv2.GaussianBlur(canny, (5,5), 1)
+	return blur
 
 def check_turning(dis):
     if int(dis[1]) < 100:
@@ -125,7 +127,7 @@ def detect_lanes(image):
 	combo_image = cv2.addWeighted(lane_image, 1, line_image, 1, 1)
 
 	cv2.line(line_image, (320, 0), (320, 480), (0, 0, 255), 1)
-	cv2.putText(combo_image, 'Lanes', (10, 20), cv2.FONT_HERSHEY_SIMPLEX, text_size, (0, 0, 255), lineType=cv2.LINE_AA)
+	cv2.putText(combo_imagex, 'Lanes', (10, 20), cv2.FONT_HERSHEY_SIMPLEX, text_size, (0, 0, 255), lineType=cv2.LINE_AA)
 
 	return combo_image, distances
 
@@ -150,7 +152,7 @@ def arrow_detection(image):
 	image = np.float32(image)
 	image = arrow_image_convertion(frame)
 	try:
-		corners = cv2.goodFeaturesToTrack(image, 20, 0.4, 5)
+		corners = cv2.goodFeaturesToTrack(image, 20, 0.1, 5)
 		corners = np.int0(corners)
 
 		right_dots = 0
@@ -184,16 +186,19 @@ def arrow_detection(image):
 
 def turn(direction):
 	if direction == 'Left':
-		dr.left()
-		#print('Turning left')
+		#dr.left()
+		print('Turning left')
 	if direction == 'Right':
-		dr.right()
-		#print('Turning right')
+		#dr.right()
+		print('Turning right')
 
 turn_com=False
 
 while True:
 	_, frame=cap.read()
+
+	direction_list= []
+
 	if turn_com==False:
 		try:
 			image_with_lanes, distance = detect_lanes(frame)
@@ -201,22 +206,28 @@ while True:
 			cv2.imshow('Result', image_with_lanes)
 		except:
 			turn_com=True
-			dr.stop(0.5)
-			#print('Stop')
+			#dr.stop(0.5)
+			print('Stop')
 	else:
 		try:
 			image_with_h_lane, turn_command = detect_h_line(frame)
 			cv2.imshow('Result', image_with_h_lane)
-			#print('Going for forward horizontal line')
-			dr.goStraight()
+			print('Going for forward horizontal line')
+			#dr.goStraight()
 			if turn_command == True:
-				arrow_image, direction = arrow_detection(frame)
+				for i in range(11):
+					arrow_image, direction = arrow_detection(frame)
+					direction_list.append(direction)
+				direction = mode(direction_list)
 				turn(direction)
-				#print("Im truning", direction)
+				print("Im truning", direction)
+				cv2.imshow('Result', arrow_image)
+				time.sleep(2)
 				turn_com=False
 		except:
 			pass
-			cv2.imshow('result', frame)
+			cv2.putText(frame, 'Original', (10, 610), cv2.FONT_HERSHEY_SIMPLEX, text_size, (0, 0, 255), lineType=cv2.LINE_AA)
+			cv2.imshow('Result', frame)
 	
 	if cv2.waitKey(10) & 0xFF == ord('q'):
 	    cap.release()
