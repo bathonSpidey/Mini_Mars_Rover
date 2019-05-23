@@ -33,8 +33,8 @@ def left():
     bus.write_i2c_block_data(address1,3,[int(90),int(90)])
     time.sleep(2)
 
-def left45():
-    bus.write_i2c_block_data(address1,12,[int(90),int(90)])
+def leftCustom(angle):
+    bus.write_i2c_block_data(address1,12,[int(angle),0])
     time.sleep(2)
 
 """  
@@ -47,8 +47,8 @@ def right():
     bus.write_i2c_block_data(address1,9,[int(90),int(90)])
     time.sleep(2)
 
-def right45():
-    bus.write_i2c_block_data(address1,13,[int(90),int(90)])
+def rightCustom(angle):
+    bus.write_i2c_block_data(address1,13,[int(angle),0])
     time.sleep(2)
 
 if __name__=="__main__":

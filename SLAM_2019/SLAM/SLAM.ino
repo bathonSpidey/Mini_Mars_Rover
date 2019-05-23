@@ -254,6 +254,36 @@ void loop() {
       p = 0;
       break;
 
+      case 12:
+        s = 12;
+        Counta = 0;
+        Countb = 0;
+        Entfg = (A[1]*335)/90;
+        digitalWrite(dira, HIGH);
+        digitalWrite(dirb, LOW);
+        analogWrite(Speeda, 90);
+        analogWrite(Speedb, 90);
+        while (Counta < Entfg || Countb < Entfg) {
+          Entfg =(A[1]*335)/90;
+        }
+      p = 0;
+      break;
+
+      case 13:
+      s = 13;
+        Counta = 0;
+        Countb = 0;
+        Entfg =(A[1]*335)/90;
+        digitalWrite(dira, LOW);
+        digitalWrite(dirb, HIGH);
+        analogWrite(Speeda, 90);
+        analogWrite(Speedb, 90);
+        while (Counta < Entfg || Countb < Entfg) {
+         Entfg =(A[1]*335)/90;
+        }
+      p = 0;
+      break;
+
       case 11:
         s = 11;
         encoder_read();
