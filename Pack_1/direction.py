@@ -52,10 +52,6 @@ def right45():
     time.sleep(2)
 
 if __name__=="__main__":
-    while True:
-        goStraight()
-        time.sleep(4)
-        stop(2)
-        
-        break
+    left45()
+
         

@@ -88,7 +88,7 @@ def checkColor(image):
     mask = cv2.inRange(hsv, (36, 25, 25), (70, 255,255))
     res = cv2.bitwise_and(image,image, mask=mask)
     ret,thrshed = cv2.threshold(cv2.cvtColor(res,cv2.COLOR_BGR2GRAY),3,255,cv2.THRESH_BINARY)
-    contours,hier = cv2.findContours(thrshed,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
+    _,contours,hier = cv2.findContours(thrshed,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
     for cnt in contours:
         area = cv2.contourArea(cnt)
         if area >5000:
@@ -107,7 +107,6 @@ def checkColor(image):
             dr.stop(2)
             dr.left()
             n=n+1
-    if count>60:
         return True
     return False
 
@@ -130,23 +129,21 @@ while True:
     #dr.stop(3)
 
 #image = cv2.imread('roverroadvision.png')
+    if checkColor(image)==True:
+        print('I am busy turning')
     try:
-            lane_image = np.copy(image)
-            canny_image = canny(lane_image)
-            cropped_image = roi(canny_image)
-            lines = cv2.HoughLinesP(canny_image, 1, np.pi/180, 50, np.array([]), minLineLength=20, maxLineGap=50)
-            averaged_lines, distances = average_slope_intercept(lane_image, lines)
-            line_image = display_lines(lane_image, averaged_lines)
-            combo_image = cv2.addWeighted(lane_image, 0.8, line_image, 1, 1)
-            cv2.imshow("Result", combo_image)   
-            if checkColor:
-                print('I am busy turning')
-            else:
-                check_turning(distances)
+        lane_image = np.copy(image)
+        canny_image = canny(lane_image)
+        cropped_image = roi(canny_image)
+        lines = cv2.HoughLinesP(canny_image, 1, np.pi/180, 50, np.array([]), minLineLength=20, maxLineGap=50)
+        averaged_lines, distances = average_slope_intercept(lane_image, lines)
+        line_image = display_lines(lane_image, averaged_lines)
+        combo_image = cv2.addWeighted(lane_image, 0.8, line_image, 1, 1)
+        cv2.imshow("Result", combo_image)   
+        check_turning(distances)
     except:
-            
-            cv2.imshow("Result", image)
-            dr.goCustom(70,90)
+        cv2.imshow("Result", image)
+        dr.goCustom(70,90)
     if cv2.waitKey(10) & 0xFF == ord('q'):
         cap.release()
         cv2.destroyAllWindows()

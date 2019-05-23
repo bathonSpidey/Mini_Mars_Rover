@@ -8,7 +8,7 @@ green_lower = np.array([64, 70, 86], np.uint8)
 green_upper = np.array([80,255,255], np.uint8)
 text_size = 0.5
 
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 print("Camera connected")
 
 def make_coordinates(image, line_parameters):
@@ -187,8 +187,10 @@ def turn(direction):
 		dr.right()
 		#print('Turning right')
 
-turn_com=False
 
+
+turn_com=False
+time.sleep(3)
 while True:
 	_, frame=cap.read()
 	if turn_com==False:
@@ -208,7 +210,7 @@ while True:
 			dr.goStraight()
 			if turn_command == True:
 				arrow_image, direction = arrow_detection(frame)
-				turn(direction)
+				turn(direction)			    
 				#print("Im truning", direction)
 				turn_com=False
 		except:
@@ -220,4 +222,3 @@ while True:
 	    #cv2.imwrite('roi.png', frame)
 	    cv2.destroyAllWindows()
 	    break
-cv2.waitKey(0)
