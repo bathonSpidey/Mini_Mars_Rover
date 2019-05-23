@@ -118,7 +118,7 @@ def checkColor(image):
             cv2.rectangle(image,(5,40),(400,100),(0,255,255),2)
             count+=1
     print('count', count)
-    if count==60:
+    if count==10:
         gray=cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
         a=corners(gray)
         j=0
@@ -156,7 +156,13 @@ while True:
 #image = cv2.imread('roverroadvision.png')
     if turnTo:
         print('I am busy turning')
-        checkColor(image)
+        i=0
+        while True:
+            checkColor(image)
+            if i>20:
+                TurnTo=False
+                break
+            i+=1
     else: 
         try:
             lane_image = np.copy(image)
