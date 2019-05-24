@@ -86,15 +86,29 @@ def check_turning(dis):
         dr.goStraight()
         print('straight')
 
+def instant():
+    _, image=cap.read()
+    lane_image = np.copy(image)
+    canny_image = canny(lane_image)
+    cropped_image = roi(canny_image)
+    lines = cv2.HoughLinesP(canny_image, 1, np.pi/180, 50, np.array([]), minLineLength=20, maxLineGap=50)
+    averaged_lines, distances = average_slope_intercept(lane_image, lines)
+    line_image = display_lines(lane_image, averaged_lines)
+    combo_image = cv2.addWeighted(lane_image, 0.8, line_image, 1, 1)
+    cv2.imshow("Result", combo_image)   
+    check_turning(distances)
+    i+=1
+    print(i)
+
 if __name__=="__main__":
-    
+    time.sleep(5)
     #_, image=cap.read()
     i=0
     #dr.goStraight()
     #time.sleep(2)
     #dr.stop(3)
     #image = cv2.imread('roverroadvision.png'
-    while i<30:
+    while i<50:
         try:
             _, image=cap.read()
             lane_image = np.copy(image)
@@ -110,8 +124,8 @@ if __name__=="__main__":
             print(i)
         except:
             cv2.imshow("Result", image)
-            dr.goCustom(60,70)
-            i+=1
+            dr.goCustom(60,75)
+            i-=1
             print(i)
              
         if cv2.waitKey(10) & 0xFF == ord('q'):
@@ -120,10 +134,8 @@ if __name__=="__main__":
             break
         
     i=0
-    dr.stop(2)
+    dr.stop(1)
     dr.right()
-    print("I am right")
-    dr.stop(2)
     #dr.goStraight()
         
     

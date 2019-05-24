@@ -36,6 +36,7 @@ def left():
 def leftCustom(angle):
     bus.write_i2c_block_data(address1,12,[int(angle),0])
     time.sleep(2)
+    
 
 """  
 def reverse(sleep_time):
@@ -53,6 +54,8 @@ def rightCustom(angle):
     time.sleep(2)
 
 if __name__=="__main__":
-    left()
+    while True:
+        number=bus.read_i2c_block_data(address1,0,5)
+        print (number[4])
 
         

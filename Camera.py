@@ -3,16 +3,13 @@ import cv2
 
 def show_webcam(mirror=False):
     cam = cv2.VideoCapture(0)
-<<<<<<< HEAD
-    cam.set(28,12)
-    cam.set(10,100)
-    cam.set(3, 1280) # set the resolution
-    cam.set(4, 720)
-    cam.set(cv2.CAP_PROP_AUTOFOCUS, 0)
-=======
     #cam.set(28,12)
     #cam.set(10,100)
->>>>>>> 9b0291587e33e734ff07e0ca536970e2a7c2b7be
+    #cam.set(3, 1280) # set the resolution
+    #cam.set(4, 720)
+    #cam.set(cv2.CAP_PROP_AUTOFOCUS, 0)
+    #cam.set(28,12)
+    #cam.set(10,100)
     while True:
         ret_val, img = cam.read()
         if mirror: 
