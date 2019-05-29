@@ -99,6 +99,7 @@ void reset() {
 }
 
 void loop() {
+  //A[3]=(analogRead(9));
   switch (p) {
 
     case 1:
@@ -321,101 +322,13 @@ void receiveData(int byteCount) {
 }
 
 void sendData() {
-  
-    //Serial.print(" s ");
-    //Serial.println(s);
-  switch (s) {
-    case 1:
-    Serial.print("Entfernung: ");
-    Serial.print(Array[0]+Array[1]*255);
-    Serial.print(" Winkel: ");
-    Serial.println(Array[2]);
-      Wire.write(Array, 3);
-      Array[1] = 0;
-      Array[0] = 0;
-      Array[2] = 0;
-      Array[3] = 0;
-      s = 0;
-      break;
-
-    case 2:
-      Array[1] = 0;
-      Array[0] = 0;
-      Array[2] = 0;
-      Array[3] = 0;
-      //Serial.println("222");
-      while (Counta > 255) {
-        Array[1] = Array[1] + 1;
-        Counta = Counta - 255;
-      }
-      Array[0] = Counta;
-      while (Countb > 255) {
-        Array[3] = Array[3] + 1;
-        Countb = Countb - 255;
-      }
-      Array[2] = Countb;
-      Countb = 0;
-      Counta = 0;
-      Wire.write(Array, 4);
-      s = 0;
-      /*Serial.print("Counta ");
-      Serial.print(Array[0] + Array[1] * 255);
-      Serial.print(" Countb ");
-      Serial.println(Array[2] + Array[3] * 255);*/
-      Wire.write(Array, 4);
-      break;
-
-    case 3:
-      Array[0] = 0;
-      Array[1] = 0;
-      Array[2] = 0;
-      Array[3] = 0;
-      Counta = 0;
-      Countb = 0;
-      s = 0;
-      break;
-
-    case 4:
-      //Serial.print("444");
-      Array[1] = 0;
-      Array[0] = 0;
-      Array[2] = 0;
-      Array[3] = 0;
-      while (Counta > 255) {
-        Array[1] = Array[1] + 1;
-        Counta = Counta - 255;
-      }
-      Array[0] = Counta;
-      while (Countb > 255) {
-        Array[3] = Array[3] + 1;
-        Countb = Countb - 255;
-      }
-      Array[2] = Countb;
-      Countb = 0;
-      Counta = 0;
-      /*Serial.print("Counta ");
-      Serial.print(Array[0] + Array[1] * 255);
-      Serial.print(" Countb ");
-      Serial.println(Array[2] + Array[3] * 255);*/
-      Wire.write(Array, 4);
-      
-      s = 0;
-      break;
-
-    default:
-    
-      Array[1] = 0;
-      Array[0] = 0;
-      Array[2] = 0;
-      Array[3] = 0;
-      Wire.write(Array, 4);
-      break;
-      
-      case 8:
-      s = 0;
-      break;
+      //Array[1] = 0;
+      //Array[0] = 0;
+      //Array[2] = 0;
+      //Array[3] = analogRead(9);
+      Wire.write(analogRead(9));
+      //delay(100);
   }
-}
 
 void Reada () {
   Counta++;
