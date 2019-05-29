@@ -1,11 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Thu May 23 11:18:29 2019
-
-@author: spidey
-"""
-
 import cv2
 import numpy as np
 import time
@@ -82,58 +74,6 @@ def canny(image):
     canny = cv2.Canny(blur, 50, 150)
     return canny
 
-def corners(gray):
-    countL=0
-    countR=0
-    corners = cv2.goodFeaturesToTrack(gray, 25, 0.01, 10)
-    corners = np.int0(corners)
-    print(corners)
-    for i in corners:
-        x,y = i.ravel()
-        if x<400:
-            countL+=1
-        elif x>400:
-            countR+=1
-    if countL>countR:
-        return 'Left'
-    elif countL<countR:
-        return 'Right'
-    else:
-        print("None")
-
-def checkColor(image):
-    count=0
-    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    mask = cv2.inRange(hsv, (36, 25, 25), (70, 255,255))
-    res = cv2.bitwise_and(image,image, mask=mask)
-    ret,thrshed = cv2.threshold(cv2.cvtColor(res,cv2.COLOR_BGR2GRAY),3,255,cv2.THRESH_BINARY)
-    _,contours,hier = cv2.findContours(thrshed,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
-    for cnt in contours:
-        area = cv2.contourArea(cnt)
-        if area >10000:
-            print('object found')
-            gray=cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
-            corners()
-            cv2.putText(image, 'Green Object Detected', (10,80), cv2.FONT_HERSHEY_SIMPLEX, 1.0,(255, 255, 255),lineType=cv2.LINE_AA)
-            cv2.rectangle(image,(5,40),(400,100),(0,255,255),2)
-            count+=1
-    print('count', count)
-    if count==10:
-        gray=cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
-        a=corners(gray)
-        j=0
-        while j<20:
-            dr.goCustom(90,90)
-            j+=1
-            n=0
-            while n<1:
-                dr.stop(2)
-                if a =='Left':
-                    dr.left()
-                else:
-                    dr.right()
-                n=n+1
-
 def check_turning(dis):
     if int(dis[1]) < 100:
         dr.goCustom(80, 90)
@@ -143,28 +83,34 @@ def check_turning(dis):
         print('right')
     else:
         #dr.goStraight()
-        dr.goCustom(70,70)
+        dr.goStraight()
         print('straight')
 
-turnTo=False
-while True:
+def instant():
     _, image=cap.read()
+    lane_image = np.copy(image)
+    canny_image = canny(lane_image)
+    cropped_image = roi(canny_image)
+    lines = cv2.HoughLinesP(canny_image, 1, np.pi/180, 50, np.array([]), minLineLength=20, maxLineGap=50)
+    averaged_lines, distances = average_slope_intercept(lane_image, lines)
+    line_image = display_lines(lane_image, averaged_lines)
+    combo_image = cv2.addWeighted(lane_image, 0.8, line_image, 1, 1)
+    cv2.imshow("Result", combo_image)   
+    check_turning(distances)
+    i+=1
+    print(i)
+
+if __name__=="__main__":
+    time.sleep(5)
+    #_, image=cap.read()
+    i=0
     #dr.goStraight()
     #time.sleep(2)
     #dr.stop(3)
-
-#image = cv2.imread('roverroadvision.png')
-    if turnTo:
-        print('I am busy turning')
-        i=0
-        while True:
-            checkColor(image)
-            if i>20:
-                TurnTo=False
-                break
-            i+=1
-    else: 
+    #image = cv2.imread('roverroadvision.png'
+    while i<50:
         try:
+            _, image=cap.read()
             lane_image = np.copy(image)
             canny_image = canny(lane_image)
             cropped_image = roi(canny_image)
@@ -174,12 +120,24 @@ while True:
             combo_image = cv2.addWeighted(lane_image, 0.8, line_image, 1, 1)
             cv2.imshow("Result", combo_image)   
             check_turning(distances)
+            i+=1
+            print(i)
         except:
             cv2.imshow("Result", image)
-            dr.goCustom(70,90)
-            turnTo=True
-    if cv2.waitKey(10) & 0xFF == ord('q'):
-        cap.release()
-        cv2.destroyAllWindows()
-        break
+            dr.goCustom(60,75)
+            i-=1
+            print(i)
+             
+        if cv2.waitKey(10) & 0xFF == ord('q'):
+            cap.release()
+            cv2.destroyAllWindows()
+            break
+        
+    i=0
+    dr.stop(1)
+    dr.right()
+    #dr.goStraight()
+        
+    
+        
 cv2.waitKey(0)

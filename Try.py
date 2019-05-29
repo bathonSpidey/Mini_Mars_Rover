@@ -1,8 +1,6 @@
 import cv2
 import numpy as np
 import time
-import statistics
-from statistics import mode
 import direction as dr
 #import matplotlib.pyplot as plt
 
@@ -30,15 +28,15 @@ def average_slope_intercept(image, lines):
         parameters = np.polyfit((x1, x2), (y1, y2), 1)
         slope = parameters[0]
         intercept = parameters[1]
-        #if slope < -0.5 and slope > -4:
-         #   left_fit.append((slope, intercept)) 
-        if slope > 0.5 and slope < 4:
+        if slope < -0.5 and slope > -4:
+            left_fit.append((slope, intercept)) 
+        elif slope > 0.5 and slope < 4:
             right_fit.append((slope, intercept))
-    #left_fit_average = np.average(left_fit, axis=0)
+    left_fit_average = np.average(left_fit, axis=0)
     right_fit_average = np.average(right_fit, axis=0)
+    left_line = make_coordinates(image, left_fit_average)
     right_line = make_coordinates(image, right_fit_average)
-    left_distance = 0
-    left_line = right_line
+    left_distance = midpoints(image, left_line)
     right_distance = midpoints(image, right_line)
     return np.array([left_line, right_line]), [left_distance, right_distance]
 
@@ -78,7 +76,7 @@ def roi(image):
 
 def roi_h(image):
     height = image.shape[0]
-    polygons = np.array([[(0, 450), (640, 450), (640, 480), (0, 480)]])
+    polygons = np.array([[(0,300), (640, 300), (640, 380), (0, 380)]])
     mask = np.zeros_like(image)
     cv2.fillPoly(mask, polygons, 255)
     masked_image = cv2.bitwise_and(image, mask)
@@ -90,6 +88,7 @@ def display_lines(image, lines):
         for line in lines:
             x1, y1, x2, y2 = line.reshape(4)
             cv2.line(line_image, (x1, y1), (x2, y2), (255, 0, 0), 5)
+            cv2.line(line_image, (320, 0), (320, 480), (0, 0, 255), 1)
     return line_image
 
 def canny(image):
@@ -103,11 +102,11 @@ def arrow_image_convertion(image):
     mask = cv2.inRange(hsv, green_lower, green_upper)
     res = cv2.bitwise_and(image, image, mask=mask)
     canny = cv2.Canny(mask, 80, 110)
-    blur = cv2.GaussianBlur(canny, (5,5), 1)
-    return blur
+    #blur = cv2.GaussianBlur(canny, (5,5), 1)
+    return canny
 
 def check_turning(dis):
-    if int(dis[1]) < 100:
+    if int(dis[1]) < 80:
         dr.goCustom(80, 90)
         #print("Adjusting left")
     elif int(dis[1]) > 150:
@@ -125,10 +124,6 @@ def detect_lanes(image):
     averaged_lines, distances = average_slope_intercept(lane_image, lines)
     line_image = display_lines(lane_image, averaged_lines)
     combo_image = cv2.addWeighted(lane_image, 1, line_image, 1, 1)
-
-    cv2.line(line_image, (320, 0), (320, 480), (0, 0, 255), 1)
-    cv2.putText(combo_image, 'Lanes', (10, 20), cv2.FONT_HERSHEY_SIMPLEX, text_size, (0, 0, 255), lineType=cv2.LINE_AA)
-
     return combo_image, distances
 
 def detect_h_line(image):
@@ -152,7 +147,7 @@ def arrow_detection(image):
     image = np.float32(image)
     image = arrow_image_convertion(frame)
     try:
-        corners = cv2.goodFeaturesToTrack(image, 20, 0.1, 5)
+        corners = cv2.goodFeaturesToTrack(image, 20, 0.4, 5)
         corners = np.int0(corners)
 
         right_dots = 0
@@ -186,65 +181,50 @@ def arrow_detection(image):
 
 def turn(direction):
     if direction == 'Left':
+        stop(3)
+        dr.goStraight()
+        time.sleep(2)
+        dr.stop(1)
         dr.left()
-        print('Turning left')
+        #print('Turning left')
     if direction == 'Right':
+        stop(3)
+        dr.goStraight()
+        time.sleep(2)
+        dr.stop(1)
         dr.right()
-        print('Turning right')
-fourcc=cv2.VideoWriter_fourcc(*'XVID')
-out= cv2.VideoWriter('output.avi', fourcc, 30.0, (640, 480))
+        #print('Turning right')
+
 turn_com=False
-time.sleep(2)
+
 while True:
     _, frame=cap.read()
-
-    direction_list= []
-
     if turn_com==False:
         try:
             image_with_lanes, distance = detect_lanes(frame)
             check_turning(distance)
             cv2.imshow('Result', image_with_lanes)
-            out.write(image_with_lanes)
         except:
-            cv2.imshow('Result', frame)
-            out.write(frame)
             turn_com=True
             dr.stop(0.5)
-            print('Stop')
+            #print('Stop')
     else:
         try:
             image_with_h_lane, turn_command = detect_h_line(frame)
             cv2.imshow('Result', image_with_h_lane)
-            out.write(image_with_h_lane)
-            print('Going for forward horizontal line')
+            #print('Going for forward horizontal line')
             dr.goStraight()
             if turn_command == True:
-                print('stop')
-                dr.stop(0.5)
-                for i in range(5):
-                    arrow_image, direction = arrow_detection(frame)
-                    direction_list.append(direction)
-                    cv2.imshow('Result', arrow_image)
-                    out.write(arrow_image)
-                direction = mode(direction_list)
-                if direction != 'Undefined':
-                    turn(direction)
-                    print("Im turning", direction)
-                cv2.imshow('Result', arrow_image)
-                out.write(image_with_h_lane)
-                time.sleep(0.5)
+                arrow_image, direction = arrow_detection(frame)
+                turn(direction)
+                #print("Im truning", direction)
                 turn_com=False
-                turn_command=False
         except:
             pass
-            cv2.putText(frame, 'Original', (10, 610), cv2.FONT_HERSHEY_SIMPLEX, text_size, (0, 0, 255), lineType=cv2.LINE_AA)
-            cv2.imshow('Result', frame)
-            out.write(frame)
+            cv2.imshow('result', frame)
     
     if cv2.waitKey(10) & 0xFF == ord('q'):
         cap.release()
-        out.release()
         #cv2.imwrite('roi.png', frame)
         cv2.destroyAllWindows()
         break

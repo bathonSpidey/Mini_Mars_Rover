@@ -76,14 +76,14 @@ def canny(image):
 
 def check_turning(dis):
     if int(dis[1]) < 100:
-        dr.goCustom(80, 90)
+        dr.goCustom(70, 80)
         print('left')
     elif int(dis[1]) > 150:
-        dr.goCustom(90, 80)
+        dr.goCustom(80, 70)
         print('right')
     else:
         #dr.goStraight()
-        dr.goCustom(70,70)
+        dr.goStraight()
         print('straight')
 
 while True:
@@ -106,7 +106,7 @@ while True:
     except:
             
             cv2.imshow("Result", image)
-            dr.goCustom(70,90)
+            dr.goCustom(60,70)
     if cv2.waitKey(10) & 0xFF == ord('q'):
         cap.release()
         cv2.destroyAllWindows()
