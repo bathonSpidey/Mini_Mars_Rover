@@ -27,15 +27,18 @@ def goStraight():
     
 def stop(sleep_time):
     bus.write_i2c_block_data(address1,4,[int(90),int(90)])
-    time.sleep(sleep_time)
+    for i in range(sleeptime*1000):
+        i+=1
     
 def left():
     bus.write_i2c_block_data(address1,3,[int(90),int(90)])
-    time.sleep(2)
+    for i in range(sleeptime*2000):
+        i+=1
 
 def leftCustom(angle):
     bus.write_i2c_block_data(address1,12,[int(angle),0])
-    time.sleep(2)
+    for i in range(sleeptime*2000):
+        i+=1
     
 
 """  
@@ -46,16 +49,33 @@ def reverse(sleep_time):
 
 def right():
     bus.write_i2c_block_data(address1,9,[int(90),int(90)])
-    time.sleep(2)
+    for i in range(sleeptime*2000):
+        i+=1
     bus.write_i2c_block_data(address1,4,[int(90),int(90)])
 
 def rightCustom(angle):
     bus.write_i2c_block_data(address1,13,[int(angle),0])
-    time.sleep(2)
+    for i in range(sleeptime*2000):
+        i+=1
+    
+def read_distance():
+    number=bus.read_i2c_block_data(address1,0,1)
+    return number[0]
+
+    
 
 if __name__=="__main__":
     while True:
-        number=bus.read_i2c_block_data(address1,0,5)
-        print (number[4])
+        print(read_distance())
+        number=read_distance()
+        if number<110:
+            goStraight()
+            print('i am going')
+        else:
+            print('stop')
+            stop(0.5)
+        print (number)
+
+        time.sleep(1)
 
         

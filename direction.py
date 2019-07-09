@@ -33,6 +33,11 @@ def left():
     bus.write_i2c_block_data(address1,3,[int(90),int(90)])
     time.sleep(2)
 
+def leftCustom(angle):
+    bus.write_i2c_block_data(address1,12,[int(angle),0])
+    time.sleep(2)
+    
+
 """  
 def reverse(sleep_time):
     bus.write_i2c_block_data(address1,10,[int(90),int(90)])
@@ -42,12 +47,21 @@ def reverse(sleep_time):
 def right():
     bus.write_i2c_block_data(address1,9,[int(90),int(90)])
     time.sleep(2)
+    bus.write_i2c_block_data(address1,4,[int(90),int(90)])
+
+def rightCustom(angle):
+    bus.write_i2c_block_data(address1,13,[int(angle),0])
+    time.sleep(2)
+    
+def read_distance():
+    number=bus.read_i2c_block_data(address1,0,1)
+    return number[0]
+
+    
 
 if __name__=="__main__":
     while True:
-        goStraight()
-        time.sleep(4)
-        stop(2)
+        pass
+
         
-        break
-        
+

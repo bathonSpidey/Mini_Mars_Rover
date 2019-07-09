@@ -6,8 +6,14 @@ from statistics import mode
 import direction as dr
 #import matplotlib.pyplot as plt
 
-green_lower = np.array([64, 70, 86], np.uint8)
-green_upper = np.array([80,255,255], np.uint8)
+green_lower = np.array([64, 73, 17], np.uint8)
+green_upper = np.array([86,255,81], np.uint8)
+
+red_lower = np.array([0, 130, 220], np.uint8)
+red_upper = np.array([10, 255, 255], np.uint8)
+
+blue_lower = np.array([95, 126, 0], np.uint8)
+blue_upper = np.array([117, 255, 115], np.uint8)
 text_size = 0.5
 
 cap = cv2.VideoCapture(0)
@@ -16,8 +22,8 @@ print("Camera connected")
 def make_coordinates(image, line_parameters):
     slope, intercept = line_parameters
     hight = image.shape[0]
-    y1 = 250
-    y2 = 50
+    y1 = 450
+    y2 = 200
     x1 = int((y1 - intercept)/slope)
     x2 = int((y2 - intercept)/slope)
     return np.array([x1,y1,x2,y2])
@@ -30,15 +36,15 @@ def average_slope_intercept(image, lines):
         parameters = np.polyfit((x1, x2), (y1, y2), 1)
         slope = parameters[0]
         intercept = parameters[1]
-        #if slope < -0.5 and slope > -4:
-         #   left_fit.append((slope, intercept)) 
-        if slope > 0.5 and slope < 4:
+        if slope < -0.5 and slope > -4:
+            left_fit.append((slope, intercept)) 
+        elif slope > 0.5 and slope < 4:
             right_fit.append((slope, intercept))
-    #left_fit_average = np.average(left_fit, axis=0)
+    left_fit_average = np.average(left_fit, axis=0)
     right_fit_average = np.average(right_fit, axis=0)
+    left_line = make_coordinates(image, left_fit_average)
     right_line = make_coordinates(image, right_fit_average)
-    left_distance = 0
-    left_line = right_line
+    left_distance = midpoints(image, left_line)
     right_distance = midpoints(image, right_line)
     return np.array([left_line, right_line]), [left_distance, right_distance]
 
@@ -49,7 +55,7 @@ def average_h_slope_intercept(image, lines):
         parameters = np.polyfit((x1, x2), (y1, y2), 1)
         slope = parameters[0]
         intercept = parameters[1]
-        if slope > -0.5 and slope < 0.5:
+        if slope > -1 and slope < 1:
             h_line_fit.append((slope, intercept))
     h_line_fit_average = np.average(h_line_fit, axis=0)
 
@@ -78,7 +84,7 @@ def roi(image):
 
 def roi_h(image):
     height = image.shape[0]
-    polygons = np.array([[(0, 450), (640, 450), (640, 480), (0, 480)]])
+    polygons = np.array([[(0, 300), (640, 300), (640, 480), (0, 480)]])
     mask = np.zeros_like(image)
     cv2.fillPoly(mask, polygons, 255)
     masked_image = cv2.bitwise_and(image, mask)
@@ -107,17 +113,18 @@ def arrow_image_convertion(image):
     return blur
 
 def check_turning(dis):
-    if int(dis[1]) < 100:
-        dr.goCustom(80, 90)
-        #print("Adjusting left")
-    elif int(dis[1]) > 150:
-        dr.goCustom(90, 80)
-        #print('Adjusting right')
+    if int(dis[0]) < 265:
+        dr.goCustom(100, 90)
+        print('-->')
+    elif int(dis[1]) < 255:
+        dr.goCustom(100, 90)
+        print('<--')
     else:
-        #print('going forward')
+        print('^')
         dr.goStraight()
 
 def detect_lanes(image):
+    
     lane_image = np.copy(image)
     canny_image = canny(lane_image)
     #cropped_image = roi(image)
@@ -125,7 +132,6 @@ def detect_lanes(image):
     averaged_lines, distances = average_slope_intercept(lane_image, lines)
     line_image = display_lines(lane_image, averaged_lines)
     combo_image = cv2.addWeighted(lane_image, 1, line_image, 1, 1)
-
     cv2.line(line_image, (320, 0), (320, 480), (0, 0, 255), 1)
     cv2.putText(combo_image, 'Lanes', (10, 20), cv2.FONT_HERSHEY_SIMPLEX, text_size, (0, 0, 255), lineType=cv2.LINE_AA)
 
@@ -135,7 +141,7 @@ def detect_h_line(image):
     h_lane_image = np.copy(image)
     canny_image = canny(h_lane_image)
     roi_image = roi_h(canny_image)
-    lines = cv2.HoughLinesP(roi_image, 1, np.pi/180, 100, np.array([]), minLineLength=50, maxLineGap=50)
+    lines = cv2.HoughLinesP(roi_image, 1, np.pi/180, 100, np.array([]), minLineLength=50)
     if lines is not None:
         h_lane_image = display_lines(image, lines)
         combo_image = cv2.addWeighted(h_lane_image, 1, frame, 1, 1)
@@ -152,7 +158,7 @@ def arrow_detection(image):
     image = np.float32(image)
     image = arrow_image_convertion(frame)
     try:
-        corners = cv2.goodFeaturesToTrack(image, 20, 0.1, 5)
+        corners = cv2.goodFeaturesToTrack(image, 50, 0.1, 5)
         corners = np.int0(corners)
 
         right_dots = 0
@@ -181,7 +187,7 @@ def arrow_detection(image):
         cv2.putText(dot_image, 'Arrow', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, text_size, (0, 255, 0), lineType=cv2.LINE_AA)
         return dot_image, direction
     except:
-        cv2.putText(image, 'Hor. line', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, text_size, (0, 0, 255), lineType=cv2.LINE_AA)
+        cv2.putText(image, 'Arrow', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, text_size, (0, 0, 255), lineType=cv2.LINE_AA)
         return image, 'Undefined'
 
 def turn(direction):
@@ -192,76 +198,107 @@ def turn(direction):
         dr.right()
         print('Turning right')
 
-def readRed(img):
-	hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-	red = cv2.inRange(hsv, red_lower, red_upper)
-	kernal = np.ones((5,5), 'uint8')
-	red = cv2.dilate(red, kernal)
-	res = cv2.bitwise_and(img, img, mask=red)
+def readRed(image):
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    blue = cv2.inRange(hsv, red_lower, red_upper)
+    kernal = np.ones((5,5), 'uint8')
+    blue = cv2.dilate(blue, kernal)
+    res = cv2.bitwise_and(image, image, mask=blue)
 
-	contours, hierarchy = cv2.findContours(red, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-	for pic, contour in enumerate(contours):
-		area = cv2.contourArea(contour)
-		if(area>20):
-			x,y,w,h = cv2.boundingRect(contour)
-			img = cv2.rectangle(img, (x,y), (x+w, y+h), (0,0,255), 2)
-			cv2.putText(img, 'Red Color', (x,y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255))
-			print("Found Red color")
-			return True
-	return False
+    _, contours, hierarchy = cv2.findContours(blue, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    for pic, contour in enumerate(contours):
+        area = cv2.contourArea(contour)
+        if(area>20):
+            x,y,w,h = cv2.boundingRect(contour)
+            image = cv2.rectangle(image, (x,y), (x+w, y+h), (0,0,255), 2)
+            cv2.putText(image, 'RED Color', (x,y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255))
+            return True
+    return False
 
+def read_green_arrow(image):
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    blue = cv2.inRange(hsv, green_lower, green_upper)
+    kernal = np.ones((5,5), 'uint8')
+    blue = cv2.dilate(blue, kernal)
+    res = cv2.bitwise_and(image, image, mask=blue)
 
+    _, contours, hierarchy = cv2.findContours(blue, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    for pic, contour in enumerate(contours):
+        area = cv2.contourArea(contour)
+        if(area>2000):
+            x,y,w,h = cv2.boundingRect(contour)
+            image = cv2.rectangle(image, (x,y), (x+w, y+h), (0,0,255), 2)
+            cv2.putText(image, 'Green Arrow', (x,y-5), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255))
+            return 'Right', image
+        else:
+            return 'Undefined', image
+
+def read_blue_arrow(image):
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    blue = cv2.inRange(hsv, blue_lower, blue_upper)
+    kernal = np.ones((5,5), 'uint8')
+    blue = cv2.dilate(blue, kernal)
+    res = cv2.bitwise_and(image, image, mask=blue)
+
+    _, contours, hierarchy = cv2.findContours(blue, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    for pic, contour in enumerate(contours):
+        area = cv2.contourArea(contour)
+        if(area>2000):
+            x,y,w,h = cv2.boundingRect(contour)
+            image = cv2.rectangle(image, (x,y), (x+w, y+h), (0,0,255), 2)
+            cv2.putText(image, 'BLue Arrow', (x,y-5), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255))
+            return 'Left', image
+        else:
+            return 'Undefined', image
+
+count = 0
+turn_command=False
 turn_com=False
-time.sleep(2)
 while True:
     _, frame=cap.read()
 
     direction_list= []
-
-    if readRed(frame) == False:
-
-	    if turn_com==False:
-	        try:
-	            image_with_lanes, distance = detect_lanes(frame)
-	            check_turning(distance)
-	            cv2.imshow('Result', image_with_lanes)
-	        except:
-	            cv2.imshow('Result', frame)
-	            turn_com=True
-	            dr.stop(0.5)
-	            print('Stop')
-	    if dr.read_distance()<100:
-	        try:
-	            image_with_h_lane, turn_command = detect_h_line(frame)
-	            cv2.imshow('Result', image_with_h_lane)
-	            print('Going for forward horizontal line')
-	            dr.goStraight()
-	            if turn_command == True:
-	                print('stop')
-	                dr.stop(0.5)
-	                for i in range(5):
-	                    arrow_image, direction = arrow_detection(frame)
-	                    direction_list.append(direction)
-	                    cv2.imshow('Result', arrow_image)
-	                direction = mode(direction_list)
-	                if direction != 'Undefined':
-	                    turn(direction)
-	                    print("Im turning", direction)
-	                cv2.imshow('Result', arrow_image)
-	                time.sleep(0.5)
-	                turn_com=False
-	                turn_command=False
-	        except:
-	            pass
-	            cv2.putText(frame, 'Original', (10, 610), cv2.FONT_HERSHEY_SIMPLEX, text_size, (0, 0, 255), lineType=cv2.LINE_AA)
-	            cv2.imshow('Result', frame)
-	            out.write(frame)
-    else:
-    	dr.stop(0.5)
     
+    if readRed(frame) == False:     
+        image_with_h_lane, turn_command = detect_h_line(frame)
+        if turn_command==True:
+            if count == 0 or count == 1 or count ==2:
+                turn('Right')
+                count= count+1
+            elif count == 3 or count==4 or count == 5:
+                turn('Left')
+            elif count>= 5:
+                count=0
+            turn_command=False
+            #try:
+            #    direction_blue, arrow_image= read_blue_arrow(frame)
+            #except:
+            #    direction_blue = 'Undefined'
+            #try:
+            #    direction_green, arrow_image= read_green_arrow(frame)
+            #except:
+            #    direction_green = 'Undefined'
+            #if direction_green == 'Right' and direction_blue == 'Undefined':
+            #    turn('Right')
+            #elif direction_green == 'Undefined' and direction_blue == 'Left':
+            #    turn('Left')
+            time.sleep(1)
+            
+        else:
+            try:
+                image_with_lanes, distance = detect_lanes(frame)
+                check_turning(distance)
+                cv2.imshow('Result', image_with_lanes)
+            except Exception as e:
+                print(e, 'lane reading')
+                cv2.imshow('Result', frame)
+        cv2.imshow('Result', image_with_lanes)
+    else:
+        cv2.imshow('Result', frame)
+        dr.stop(1)
+     
     if cv2.waitKey(10) & 0xFF == ord('q'):
         cap.release()
-        out.release()
         #cv2.imwrite('roi.png', frame)
         cv2.destroyAllWindows()
         break
